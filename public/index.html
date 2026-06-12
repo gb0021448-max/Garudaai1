@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        try {
+          var g = typeof globalThis !== 'undefined' ? globalThis : window;
+          
+          if (typeof g.FormData === 'undefined') {
+            g.FormData = function FormData() {};
+          }
+          if (g.FormData && !g.FormData.prototype.keys) {
+            g.FormData.prototype.keys = function() { return []; };
+          }
+
+          var originalFetch = g.fetch || window.fetch;
+          if (originalFetch) {
+            var currentFetch = originalFetch;
+            var defineOn = function(obj) {
+              if (!obj) return;
+              try {
+                Object.defineProperty(obj, 'fetch', {
+                  get: function() { return currentFetch; },
+                  set: function(v) { currentFetch = v; },
+                  configurable: true,
+                  enumerable: true
+                });
+              } catch (e) {}
+            };
+            
+            defineOn(g);
+            defineOn(window);
+            if (typeof self !== 'undefined') defineOn(self);
+            
+            try {
+              if (window.Window && window.Window.prototype) {
+                defineOn(window.Window.prototype);
+              }
+            } catch (e) {}
+            try {
+              var proto = Object.getPrototypeOf(window);
+              if (proto) defineOn(proto);
+            } catch (e) {}
+          }
+        } catch (err) {
+          console.warn("Global bootstrap patcher warning:", err);
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Garuda AI - Advanced Hub</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
